@@ -1,0 +1,15 @@
+# Monte Carlo Visualiser — Python backend dependencies
+#
+# Install with:  pip install -r requirements.txt
+#
+# fastapi   — web framework for building the REST API
+# uvicorn   — ASGI server that runs the FastAPI application
+# numpy     — numerical computing: random sampling, array maths
+# sympy     — symbolic maths: parsing user-supplied function strings
+# scipy     — scientific computing: probability distributions, statistics
+
+fastapi
+uvicorn[standard]
+numpy
+sympy
+scipy

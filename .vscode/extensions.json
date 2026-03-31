@@ -1,0 +1,22 @@
+{
+  // Recommended VS Code extensions for the Monte Carlo Visualiser project.
+  // VS Code will prompt team members to install these when they open the workspace.
+  "recommendations": [
+    // ── Python ──────────────────────────────────────────────────────────────
+    "ms-python.python",            // Python language support + IntelliSense
+    "ms-python.pylint",            // Python linting
+    "ms-python.black-formatter",   // Black code formatter
+
+    // ── TypeScript / React ───────────────────────────────────────────────────
+    "dbaeumer.vscode-eslint",      // ESLint integration
+    "esbenp.prettier-vscode",      // Prettier formatter for JS/TS/CSS
+
+    // ── Tailwind CSS ─────────────────────────────────────────────────────────
+    "bradlc.vscode-tailwindcss",   // Tailwind class autocomplete & hover docs
+
+    // ── General DX ───────────────────────────────────────────────────────────
+    "eamodio.gitlens",             // Enhanced Git history & blame
+    "usernamehw.errorlens",        // Inline error/warning messages
+    "streetsidesoftware.code-spell-checker" // Catches typos in comments/strings
+  ]
+}

@@ -1,0 +1,61 @@
+/*
+ * Global stylesheet for the Monte Carlo Visualiser.
+ *
+ * Tailwind v4 is activated by the single @import below.
+ * No tailwind.config.js is required.  
+ * All Tailwind utility classes are defined in this file.
+ */
+@import "tailwindcss";
+
+/*
+ * Base resets / design tokens that sit on top of Tailwind's preflight.
+ * Using CSS custom properties means colours can easily be swapped
+ * for dark mode without duplicating rules.
+ */
+:root {
+  /* Neutral palette */
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-border: #e2e8f0;
+
+  /* Text */
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+
+  /* Accent colour */
+  --color-accent: #6366f1; /* indigo-500 */
+  --color-accent-hover: #4f46e5; /* indigo-600 */
+
+  /* Status colours */
+  --color-success: #22c55e; /* green-500 */
+  --color-error: #ef4444; /* red-500 */
+
+  /* Typography */
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+/* Dark-mode override - applied automatically when the OS 
+ *preferences are set to dark. 
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f172a;
+    --color-surface: #1e293b;
+    --color-border: #334155;
+    --color-text: #f1f5f9;
+    --color-text-muted: #94a3b8;
+  }
+}
+
+/* Removes default margin/padding so Tailwind has a clean slate */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}

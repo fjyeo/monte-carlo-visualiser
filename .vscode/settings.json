@@ -1,0 +1,15 @@
+{
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.fontSize": 14,
+    "editor.fontFamily": "Fira Code, Consolas, monospace",
+    "editor.fontLigatures": true,
+    "editor.rulers": [80],
+    "editor.tabSize": 2,
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.python",
+      "editor.tabSize": 4
+    },
+    "editor.minimap.enabled": false,
+    "workbench.colorTheme": "Default Light+"
+  }
