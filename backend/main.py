@@ -9,6 +9,8 @@ Run the development server with:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.simulation import router as simulation_router
+
 # ── Application setup ────────────────────────────────────────────────────────
 
 # Create the FastAPI application instance.
@@ -39,6 +41,12 @@ app.add_middleware(
     allow_methods=["*"],   # Allow GET, POST, OPTIONS, etc.
     allow_headers=["*"],
 )
+
+# ── Routers ──────────────────────────────────────────────────────────────────
+
+# The simulation router exposes /simulate/standard-mc.
+# No prefix is added here because the full path is defined in the router.
+app.include_router(simulation_router, prefix="/simulate")
 
 # ── Routes ───────────────────────────────────────────────────────────────────
 
