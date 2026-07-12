@@ -1,6 +1,8 @@
 # Monte Carlo Visualiser — Python backend dependencies
 #
-# Install with:  pip install -r requirements.txt
+# Compatibility export for tools that require requirements.txt.
+# The project's source of truth is ../pyproject.toml and uv.lock.
+# Install from the repository root with: uv sync
 #
 # fastapi   — web framework for building the REST API
 # uvicorn   — ASGI server that runs the FastAPI application

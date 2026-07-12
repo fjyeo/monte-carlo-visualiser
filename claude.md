@@ -1,12 +1,14 @@
-python -m venv venv
+uv python install 3.11
+uv sync
 
-# Mac/Linux:
+# Run the backend from the repository root:
 
-source venv/bin/activate
+uv run --directory backend uvicorn main:app --reload --port 8000
 
-# Windows:
+# Run the frontend from the repository root in another terminal:
 
-venv\Scripts\activate
+npm --prefix frontend ci
+npm --prefix frontend run dev
 
 ```
 

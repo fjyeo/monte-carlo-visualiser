@@ -1,0 +1,8 @@
+# Development and test dependencies.
+#
+# Compatibility export for tools that require requirements.txt.
+# Development dependencies are managed in ../pyproject.toml and uv.lock.
+# Install from the repository root with: uv sync
+
+pytest
+httpx

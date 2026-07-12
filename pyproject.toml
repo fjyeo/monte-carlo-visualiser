@@ -1,0 +1,18 @@
+[project]
+name = "monte-carlo-visualiser"
+version = "0.1.0"
+description = "FastAPI backend for the Monte Carlo Visualiser"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "fastapi",
+    "numpy",
+    "scipy",
+    "sympy",
+    "uvicorn[standard]",
+]
+
+[dependency-groups]
+dev = [
+    "httpx",
+    "pytest",
+]
