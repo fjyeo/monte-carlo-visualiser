@@ -28,7 +28,6 @@ monte-carlo-visualiser/
 │
 ├── backend/                # Python FastAPI application
 │   ├── main.py             # ASGI entry point & route registration
-│   ├── requirements.txt    # Python dependencies
 │   └── app/
 │       ├── api/            # Route handlers (one file per feature)
 │       ├── simulation/     # Monte Carlo algorithm implementations
@@ -40,7 +39,9 @@ monte-carlo-visualiser/
 │   ├── DEVLOG.md           # Dated development diary
 │   └── screenshot_log.md   # Screenshots table for NEA evidence
 │
-└── venv/                   # Python virtual environment (git-ignored)
+├── pyproject.toml          # Python project and dependency definitions
+├── uv.lock                 # Reproducible Python dependency lockfile
+└── .venv/                  # uv-managed environment (git-ignored)
 ```
 
 ---
@@ -49,9 +50,21 @@ monte-carlo-visualiser/
 
 ### Prerequisites
 
-- **Node.js** 18 or later
+- **Node.js** 20.19 or later (Node 22 LTS is recommended)
 - **Python** 3.11 or later
+- **uv** for Python version and dependency management
 - **Git**
+
+On macOS, install Node.js and the `uv` Python package manager with Homebrew:
+
+```bash
+brew install node uv
+```
+
+If you use version managers, this repository includes:
+
+- `.nvmrc` for Node (`nvm use`)
+- `.python-version` for pyenv (`pyenv install && pyenv local`)
 
 ---
 
@@ -66,22 +79,16 @@ cd monte-carlo-visualiser
 
 ### 2 — Backend setup
 
+Run these commands from the repository root (`monte-carlo-visualiser/`):
+
 ```bash
-# Create and activate a virtual environment
-python -m venv venv
-
-# macOS / Linux:
-source venv/bin/activate
-
-# Windows (PowerShell):
-venv\Scripts\Activate.ps1
-
-# Install Python dependencies
-pip install -r backend/requirements.txt
+# Install the pinned Python version and all backend dependencies.
+# uv creates the .venv environment automatically.
+uv python install 3.11
+uv sync
 
 # Start the development server (auto-reloads on file changes)
-cd backend
-uvicorn main:app --reload --port 8000
+uv run --directory backend uvicorn main:app --reload --port 8000
 ```
 
 The API will be available at `http://localhost:8000`.
@@ -91,13 +98,17 @@ Interactive API docs (Swagger UI) at `http://localhost:8000/docs`.
 
 ### 3 — Frontend setup
 
-Open a **second terminal**:
+Open a **second terminal at the repository root**. The `--prefix frontend`
+option tells npm where to find the frontend's `package.json`:
 
 ```bash
-cd frontend
-npm install
-npm run dev
+npm --prefix frontend ci
+npm --prefix frontend run dev
 ```
+
+If your terminal is already inside `frontend/`, use `npm ci` and
+`npm run dev` without `--prefix`. Running plain `npm run dev` from the
+repository root fails because there is intentionally no root `package.json`.
 
 The React app will be available at `http://localhost:5173`.
 
@@ -116,7 +127,11 @@ and backend are communicating correctly.
 
 ## Running Tests
 
+Run all commands below from the repository root:
+
 ```bash
-cd backend
-pytest tests/
+uv sync
+uv run --directory backend pytest tests/
+npm --prefix frontend run lint
+npm --prefix frontend run build
 ```

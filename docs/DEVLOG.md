@@ -4,6 +4,39 @@ A chronological diary of progress on the Monte Carlo Visualiser NEA project.
 
 ---
 
+## 2026-07-12 — Reproducible Local Setup with uv
+
+**Goal:** Make language and dependency installation reproducible and clarify
+which directory each development command must run from.
+
+**What was done:**
+
+- Added `.nvmrc` and `.python-version` so macOS version managers select Node
+  22 and Python 3.11 consistently.
+- Raised and documented the frontend's Node.js engine requirement to 20.19 or
+  later, matching Vite 8, while recommending Node 22 LTS.
+- Adopted `uv` for Python 3.11 installation, virtual-environment management,
+  dependency resolution, and command execution.
+- Added root `pyproject.toml` and `uv.lock` files; `uv sync` now creates and
+  populates `.venv` with both runtime and test dependencies.
+- Retained the backend requirements files as compatibility exports while
+  documenting `pyproject.toml` and `uv.lock` as the dependency source of truth.
+- Added the backend health-endpoint test and its `pytest`/`httpx` development
+  dependencies so the macOS setup can be verified automatically.
+- Documented root-safe backend commands using `uv run --directory backend`.
+- Documented root-safe frontend commands using `npm --prefix frontend`.
+- Clarified that plain `npm run dev` only works after changing into
+  `frontend/`, where the frontend `package.json` is located.
+- Replaced the generated Vite frontend README with project-specific macOS,
+  Node.js, install, run, lint, build, and preview instructions.
+- Added macOS AppleDouble metadata patterns (`._*` and `.AppleDouble`) to
+  `.gitignore` so Finder-generated files are not committed.
+
+**Verified:** Backend tests, frontend linting, and the production frontend
+build all pass.
+
+---
+
 ## 2026-03-27 — Project Initialisation
 
 **Goal:** Scaffold the complete project structure so both the frontend and backend can be run locally.
@@ -33,8 +66,9 @@ A chronological diary of progress on the Monte Carlo Visualiser NEA project.
 - The Vite proxy approach avoids CORS complexity in development; in production the frontend would be served from the same origin as the API.
 - All `__init__.py` files added to backend packages so pytest can discover tests without extra configuration.
 
-**Next steps:**
+**Next steps at the time:**
 
-- Install backend dependencies into the virtual environment.
+- Install backend dependencies into the virtual environment (now handled by
+  `uv sync`; see the 2026-07-12 entry).
 - Implement the first simulation: basic Monte Carlo integration (estimating π).
 - Design the D3 scatter-plot component for visualising sample points.
