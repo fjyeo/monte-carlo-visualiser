@@ -22,8 +22,10 @@ npm --prefix frontend ci
 npm --prefix frontend run dev
 ```
 
-The dev server runs at `http://localhost:5173` and proxies `/api/*` to the
-FastAPI backend at `http://localhost:8000`.
+The React app will be available at `http://localhost:5173`.
+If your browser does not open automatically, visit `http://127.0.0.1:5173`.
+
+The Vite dev server proxies `/api/*` requests to `http://127.0.0.1:8000`.
 
 ## Commands
 

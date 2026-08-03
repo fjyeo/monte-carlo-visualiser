@@ -111,8 +111,9 @@ If your terminal is already inside `frontend/`, use `npm ci` and
 repository root fails because there is intentionally no root `package.json`.
 
 The React app will be available at `http://localhost:5173`.
+If your browser does not open automatically, visit `http://127.0.0.1:5173`.
 
-The Vite dev server proxies `/api/*` requests to `http://localhost:8000`,
+The Vite dev server proxies `/api/*` requests to `http://127.0.0.1:8000`,
 so you never need to configure CORS manually during development.
 
 ---
