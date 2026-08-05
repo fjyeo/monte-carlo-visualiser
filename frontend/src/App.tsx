@@ -3,7 +3,7 @@
  *
  * Responsibilities:
  *   1. Check whether the backend API is available.
- *   2. Display the Standard Monte Carlo controls and numerical results.
+ *   2. Display the simulation controls, numerical results, and convergence plot.
  *
  * The Vite dev-server proxy (vite.config.ts) forwards /api/* to
  * http://localhost:8000
@@ -15,6 +15,7 @@ import SimulationControls from './components/SimulationControls'
 import SimulationResults from './components/SimulationResults'
 import { useSimulation } from './hooks/useSimulation'
 import type { SimulationConfig } from './types/simulation'
+import ConvergencePlot from './visualisations/ConvergencePlot'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ export default function App() {
   const [status, setStatus] = useState<ConnectionStatus>('checking')
   const [message, setMessage] = useState<string>('')
   const [requestedSamples, setRequestedSamples] = useState<number | null>(null)
+  const [expectedMean, setExpectedMean] = useState<number | null>(null)
   const { chunks, isRunning, error, runSimulation } = useSimulation()
 
   const latestChunk = chunks.length > 0 ? chunks[chunks.length - 1] : null
@@ -65,9 +67,10 @@ export default function App() {
     checkHealth()
   }, []) // Empty dependency array → runs once on mount only
 
-  /** Record the requested total and start a validated simulation run. */
+  /** Record the chart reference values and start a validated simulation run. */
   async function handleRun(config: SimulationConfig): Promise<void> {
     setRequestedSamples(config.n_samples)
+    setExpectedMean((config.lower_bound + config.upper_bound) / 2)
     await runSimulation(config)
   }
 
@@ -147,6 +150,12 @@ export default function App() {
             error={error}
           />
         </div>
+
+        <ConvergencePlot
+          chunks={chunks}
+          requestedSamples={requestedSamples}
+          expectedMean={expectedMean}
+        />
       </div>
     </main>
   )
