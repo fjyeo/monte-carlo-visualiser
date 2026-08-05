@@ -15,8 +15,8 @@ export interface SimulationConfig {
   /** Total number of random samples to draw. */
   n_samples: number
 
-  /** Name of the sampling distribution (e.g. "uniform"). */
-  distribution: string
+  /** The sampling distribution currently supported by the backend. */
+  distribution: 'uniform'
 
   /** Lower bound of the sampling interval. */
   lower_bound: number
