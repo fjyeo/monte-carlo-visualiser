@@ -17,9 +17,10 @@ Reference for Welford's algorithm:
 
 """
 
-from typing import Generator, Optional
+from typing import Generator, Literal, Optional
+
 import numpy as np
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 
 
 # ── Configuration model ───────────────────────────────────────────────────────
@@ -29,20 +30,37 @@ class SimulationConfig(BaseModel):
     All parameters needed to run a Standard Monte Carlo simulation.
 
     Attributes:
-        n_samples (int): Total number of random samples to draw.
+        n_samples (int): Total number of random samples to draw, from 100 to
+                         100,000 inclusive.
         distribution (str): Name of the sampling distribution.
                             Only "uniform" is supported in this version.
         lower_bound (float): Lower limit of the sampling interval.
         upper_bound (float): Upper limit of the sampling interval.
         random_seed (Optional[int]): Seed for NumPy's RNG.  Passing a fixed
                                      seed makes runs reproducible; None gives
-                                     a different sequence each time.
+                           `          a different sequence each time.
     """
-    n_samples: int
-    distribution: str
+    n_samples: int = Field(ge=100, le=100_000)
+    distribution: Literal["uniform"]
     lower_bound: float
     upper_bound: float
     random_seed: Optional[int] = None
+
+    @model_validator(mode="after")
+    def validate_sampling_bounds(self) -> "SimulationConfig":
+        """
+        Check that the sampling interval has a positive width.
+
+        Returns:
+            SimulationConfig: The validated configuration.
+
+        Raises:
+            ValueError: If the lower bound is not below the upper bound.
+        """
+        if self.lower_bound >= self.upper_bound:
+            raise ValueError("lower_bound must be less than upper_bound")
+
+        return self
 
 
 # ── Welford helpers ───────────────────────────────────────────────────────────
@@ -113,15 +131,7 @@ def run_standard_mc(config: SimulationConfig) -> Generator[dict, None, None]:
             - "samples" (list[float]): The raw samples in this chunk window.
             - "complete" (bool, final only): True when the run is finished.
 
-    Raises:
-        ValueError: If config.distribution is not "uniform".
     """
-    if config.distribution != "uniform":
-        raise ValueError(
-            f"Unsupported distribution '{config.distribution}'. "
-            "Only 'uniform' is implemented in this version."
-        )
-
     # Seed NumPy's RNG for reproducibility if a seed was provided.
     rng = np.random.default_rng(config.random_seed)
 
