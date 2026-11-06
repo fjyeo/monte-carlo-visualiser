@@ -7,7 +7,7 @@
  */
 
 import { useState, type FormEvent } from 'react'
-import type { SimulationConfig } from '../types/simulation'
+import type { IntegrandName, SimulationConfig } from '../types/simulation'
 
 interface SimulationControlsProps {
   /** True while a simulation request is in progress. */
@@ -20,6 +20,7 @@ interface SimulationControlsProps {
 
 interface SimulationFormValues {
   nSamples: string
+  integrand: IntegrandName
   lowerBound: string
   upperBound: string
   randomSeed: string
@@ -27,6 +28,7 @@ interface SimulationFormValues {
 
 const INITIAL_VALUES: SimulationFormValues = {
   nSamples: '1000',
+  integrand: 'x_squared',
   lowerBound: '0',
   upperBound: '1',
   randomSeed: '42',
@@ -80,6 +82,7 @@ function buildConfig(values: SimulationFormValues): SimulationConfig {
   const config: SimulationConfig = {
     n_samples: Number(values.nSamples),
     distribution: 'uniform',
+    integrand: values.integrand,
     lower_bound: Number(values.lowerBound),
     upper_bound: Number(values.upperBound),
   }
@@ -101,7 +104,10 @@ export default function SimulationControls({
   const [validationError, setValidationError] = useState<string | null>(null)
 
   /** Update one form field and clear any validation message from an old value. */
-  function updateValue(field: keyof SimulationFormValues, value: string): void {
+  function updateValue<Field extends keyof SimulationFormValues>(
+    field: Field,
+    value: SimulationFormValues[Field],
+  ): void {
     setValues((currentValues) => ({ ...currentValues, [field]: value }))
     setValidationError(null)
   }
@@ -129,7 +135,7 @@ export default function SimulationControls({
         Simulation parameters
       </h2>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-        Configure a Standard Monte Carlo simulation using a uniform distribution.
+        Estimate a definite integral using uniform random samples.
       </p>
 
       <form className="mt-6 space-y-5" onSubmit={handleSubmit} noValidate>
@@ -172,6 +178,31 @@ export default function SimulationControls({
           >
             <option value="uniform">Uniform</option>
           </select>
+        </div>
+
+        <div>
+          <label
+            className="text-sm font-medium text-slate-700 dark:text-slate-200"
+            htmlFor="integrand"
+          >
+            Integrand
+          </label>
+          <select
+            className={inputClasses}
+            id="integrand"
+            value={values.integrand}
+            disabled={isRunning}
+            onChange={(event) =>
+              updateValue('integrand', event.target.value as IntegrandName)
+            }
+          >
+            <option value="x">f(x) = x</option>
+            <option value="x_squared">f(x) = x²</option>
+            <option value="sin_x">f(x) = sin(x)</option>
+          </select>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Trigonometric inputs and bounds are measured in radians.
+          </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">

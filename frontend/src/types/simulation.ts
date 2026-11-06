@@ -6,6 +6,9 @@
  * Any change to the backend models should be reflected here.
  */
 
+/** Mathematical functions currently available for integration. */
+export type IntegrandName = 'x' | 'x_squared' | 'sin_x'
+
 /**
  * Parameters sent to the backend to configure a simulation run.
  *
@@ -17,6 +20,9 @@ export interface SimulationConfig {
 
   /** The sampling distribution currently supported by the backend. */
   distribution: 'uniform'
+
+  /** Preset mathematical function evaluated at every random sample. */
+  integrand: IntegrandName
 
   /** Lower bound of the sampling interval. */
   lower_bound: number
@@ -42,11 +48,11 @@ export interface SimulationChunk {
   /** Index of the last sample included in this snapshot (1-based). */
   sample_number: number
 
-  /** Running mean of all samples seen up to and including this chunk. */
-  running_mean: number
+  /** Running estimate of the selected definite integral. */
+  running_estimate: number
 
   /**
-   * Unbiased sample variance (Bessel-corrected) of all samples so far.
+   * Unbiased variance of the scaled function values accumulated so far.
    * Will be 0 for the very first sample.
    */
   running_variance: number

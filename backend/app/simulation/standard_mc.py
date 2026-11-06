@@ -6,8 +6,10 @@ so the frontend can visualise convergence in real time.
 
 Algorithm:
   - Draw n uniform random samples from [lower_bound, upper_bound].
-  - Track the running mean and variance with Welford's online algorithm,
-    which avoids catastrophic cancellation and requires only O(1) memory.
+  - Evaluate a selected function at each sample.
+  - Estimate its definite integral using the interval width and the running
+    mean of the function values.
+  - Track the estimate and variance with Welford's online algorithm.
   - Yield a progress snapshot every 100 samples so the client can update
     its chart without waiting for the full run to complete.
 
@@ -17,10 +19,14 @@ Reference for Welford's algorithm:
 
 """
 
+import math
 from typing import Generator, Literal, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field, model_validator
+
+
+IntegrandName = Literal["x", "x_squared", "sin_x"]
 
 
 # ── Configuration model ───────────────────────────────────────────────────────
@@ -34,14 +40,16 @@ class SimulationConfig(BaseModel):
                          100,000 inclusive.
         distribution (str): Name of the sampling distribution.
                             Only "uniform" is supported in this version.
+        integrand (str): Preset mathematical function to integrate.
         lower_bound (float): Lower limit of the sampling interval.
         upper_bound (float): Upper limit of the sampling interval.
         random_seed (Optional[int]): Seed for NumPy's RNG.  Passing a fixed
                                      seed makes runs reproducible; None gives
-                           `          a different sequence each time.
+                                     a different sequence each time.
     """
     n_samples: int = Field(ge=100, le=100_000)
     distribution: Literal["uniform"]
+    integrand: IntegrandName
     lower_bound: float
     upper_bound: float
     random_seed: Optional[int] = None
@@ -61,6 +69,35 @@ class SimulationConfig(BaseModel):
             raise ValueError("lower_bound must be less than upper_bound")
 
         return self
+
+
+# ── Integrand evaluation ─────────────────────────────────────────────────────
+
+def evaluate_integrand(
+    sample: float,
+    integrand: IntegrandName,
+) -> float:
+    """
+    Evaluate one of the supported preset functions at a sample value.
+
+    Args:
+        sample (float): Random value drawn from the sampling interval.
+        integrand (str): Identifier of the selected preset function.
+
+    Returns:
+        float: Function value at the supplied sample.
+
+    Raises:
+        ValueError: If the integrand identifier is not supported.
+    """
+    if integrand == "x":
+        return sample
+    if integrand == "x_squared":
+        return sample ** 2
+    if integrand == "sin_x":
+        return math.sin(sample)
+
+    raise ValueError(f"Unsupported integrand '{integrand}'")
 
 
 # ── Welford helpers ───────────────────────────────────────────────────────────
@@ -116,9 +153,10 @@ def run_standard_mc(config: SimulationConfig) -> Generator[dict, None, None]:
     """
     Run a Standard Monte Carlo simulation, yielding progress chunks.
 
-    Draws samples one at a time, updates running statistics with Welford's
-    algorithm, and yields a snapshot dict every CHUNK_SIZE samples.  A final
-    dict with "complete": True is always yielded at the end.
+    Draws samples uniformly from the configured bounds and evaluates the
+    selected function. Each function value is multiplied by the interval
+    width so the running mean estimates the definite integral. A snapshot is
+    yielded every CHUNK_SIZE samples, followed by a final complete snapshot.
 
     Args:
         config (SimulationConfig): All parameters for this simulation run.
@@ -126,14 +164,15 @@ def run_standard_mc(config: SimulationConfig) -> Generator[dict, None, None]:
     Yields:
         dict: Progress snapshot containing:
             - "sample_number" (int): Index of the last sample in this chunk.
-            - "running_mean" (float): Mean of all samples seen so far.
-            - "running_variance" (float): Unbiased variance of samples so far.
+            - "running_estimate" (float): Current definite-integral estimate.
+            - "running_variance" (float): Variance of scaled function values.
             - "samples" (list[float]): The raw samples in this chunk window.
             - "complete" (bool, final only): True when the run is finished.
 
     """
     # Seed NumPy's RNG for reproducibility if a seed was provided.
     rng = np.random.default_rng(config.random_seed)
+    interval_width = config.upper_bound - config.lower_bound
 
     # Welford accumulators — updated incrementally with each sample.
     welford_count: int = 0
@@ -152,9 +191,14 @@ def run_standard_mc(config: SimulationConfig) -> Generator[dict, None, None]:
             rng.uniform(config.lower_bound, config.upper_bound)
         )
 
-        # Update Welford's online algorithm with the new sample.
+        # Scaling f(x) by the interval width makes its mean estimate the
+        # definite integral over the configured bounds.
+        function_value = evaluate_integrand(sample, config.integrand)
+        sample_contribution = interval_width * function_value
+
+        # Update Welford's algorithm with the scaled function value.
         welford_count, welford_mean, welford_M2 = _welford_update(
-            welford_count, welford_mean, welford_M2, sample
+            welford_count, welford_mean, welford_M2, sample_contribution
         )
 
         chunk_samples.append(sample)
@@ -166,7 +210,7 @@ def run_standard_mc(config: SimulationConfig) -> Generator[dict, None, None]:
         if is_chunk_boundary or is_last_sample:
             yield {
                 "sample_number": i,
-                "running_mean": welford_mean,
+                "running_estimate": welford_mean,
                 "running_variance": _sample_variance(welford_count, welford_M2),
                 "samples": chunk_samples.copy(),
                 "complete": is_last_sample,
