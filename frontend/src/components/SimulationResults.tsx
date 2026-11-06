@@ -41,7 +41,7 @@ export default function SimulationResults({
         Standard Monte Carlo results
       </h2>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-        Running statistics update as sample batches arrive from the backend.
+        The integral estimate updates as sample batches arrive from the backend.
       </p>
 
       {error !== null ? (
@@ -79,14 +79,18 @@ export default function SimulationResults({
 
           <dl className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-700">
-              <dt className="text-sm text-slate-600 dark:text-slate-300">Running mean</dt>
+              <dt className="text-sm text-slate-600 dark:text-slate-300">
+                Running estimate
+              </dt>
               <dd className="mt-1 font-mono text-xl font-semibold text-slate-900 dark:text-white">
-                {formatStatistic(latestChunk.running_mean)}
+                {formatStatistic(latestChunk.running_estimate)}
               </dd>
             </div>
 
             <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-700">
-              <dt className="text-sm text-slate-600 dark:text-slate-300">Running variance</dt>
+              <dt className="text-sm text-slate-600 dark:text-slate-300">
+                Sample variance
+              </dt>
               <dd className="mt-1 font-mono text-xl font-semibold text-slate-900 dark:text-white">
                 {formatStatistic(latestChunk.running_variance)}
               </dd>

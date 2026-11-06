@@ -28,6 +28,21 @@ interface HealthResponse {
 /** The three possible states while checking the API. */
 type ConnectionStatus = 'checking' | 'connected' | 'disconnected'
 
+/** Calculate the exact definite integral for a supported preset function. */
+function calculateAnalyticalValue(config: SimulationConfig): number {
+  const lowerBound = config.lower_bound
+  const upperBound = config.upper_bound
+
+  switch (config.integrand) {
+    case 'x':
+      return (upperBound ** 2 - lowerBound ** 2) / 2
+    case 'x_squared':
+      return (upperBound ** 3 - lowerBound ** 3) / 3
+    case 'sin_x':
+      return Math.cos(lowerBound) - Math.cos(upperBound)
+  }
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 /** Coordinate the API health check, simulation controls, and result display. */
@@ -35,7 +50,7 @@ export default function App() {
   const [status, setStatus] = useState<ConnectionStatus>('checking')
   const [message, setMessage] = useState<string>('')
   const [requestedSamples, setRequestedSamples] = useState<number | null>(null)
-  const [expectedMean, setExpectedMean] = useState<number | null>(null)
+  const [analyticalValue, setAnalyticalValue] = useState<number | null>(null)
   const { chunks, isRunning, error, runSimulation } = useSimulation()
 
   const latestChunk = chunks.length > 0 ? chunks[chunks.length - 1] : null
@@ -70,7 +85,7 @@ export default function App() {
   /** Record the chart reference values and start a validated simulation run. */
   async function handleRun(config: SimulationConfig): Promise<void> {
     setRequestedSamples(config.n_samples)
-    setExpectedMean((config.lower_bound + config.upper_bound) / 2)
+    setAnalyticalValue(calculateAnalyticalValue(config))
     await runSimulation(config)
   }
 
@@ -154,7 +169,7 @@ export default function App() {
         <ConvergencePlot
           chunks={chunks}
           requestedSamples={requestedSamples}
-          expectedMean={expectedMean}
+          analyticalValue={analyticalValue}
         />
       </div>
     </main>
