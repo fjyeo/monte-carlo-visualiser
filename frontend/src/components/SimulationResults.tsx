@@ -95,6 +95,25 @@ export default function SimulationResults({
                 {formatStatistic(latestChunk.running_variance)}
               </dd>
             </div>
+
+            <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-700">
+              <dt className="text-sm text-slate-600 dark:text-slate-300">
+                Standard error
+              </dt>
+              <dd className="mt-1 font-mono text-xl font-semibold text-slate-900 dark:text-white">
+                {formatStatistic(latestChunk.standard_error)}
+              </dd>
+            </div>
+
+            <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-700">
+              <dt className="text-sm text-slate-600 dark:text-slate-300">
+                Approximate 95% confidence interval
+              </dt>
+              <dd className="mt-1 font-mono text-base font-semibold text-slate-900 dark:text-white">
+                [{formatStatistic(latestChunk.confidence_interval_lower)},{' '}
+                {formatStatistic(latestChunk.confidence_interval_upper)}]
+              </dd>
+            </div>
           </dl>
 
           <p className="rounded-lg bg-indigo-50 p-3 text-sm font-medium text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200">

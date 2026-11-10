@@ -10,6 +10,10 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from app.diagnostics.uncertainty import (
+    calculate_confidence_interval,
+    calculate_standard_error,
+)
 from app.simulation.standard_mc import (
     IntegrandName,
     SimulationConfig,
@@ -27,6 +31,35 @@ VALID_CONFIG = {
     "upper_bound": 1.0,
     "random_seed": 42,
 }
+
+
+def test_standard_error_uses_variance_and_sample_count() -> None:
+    """Standard error should equal the square root of variance divided by n."""
+    result = calculate_standard_error(sample_variance=4.0, sample_count=100)
+
+    assert result == pytest.approx(0.2)
+
+
+@pytest.mark.parametrize("sample_count", [0, 1])
+def test_standard_error_is_zero_without_enough_samples(sample_count: int) -> None:
+    """Uncertainty should be zero before a sample variance can be calculated."""
+    result = calculate_standard_error(
+        sample_variance=0.0,
+        sample_count=sample_count,
+    )
+
+    assert result == 0.0
+
+
+def test_confidence_interval_uses_95_percent_margin() -> None:
+    """Confidence limits should be 1.96 standard errors from the estimate."""
+    lower_limit, upper_limit = calculate_confidence_interval(
+        estimate=10.0,
+        standard_error=0.5,
+    )
+
+    assert lower_limit == pytest.approx(9.02)
+    assert upper_limit == pytest.approx(10.98)
 
 
 @pytest.mark.parametrize(
@@ -112,6 +145,43 @@ def test_fixed_seed_reproduces_integral_estimate() -> None:
     assert first_result["running_estimate"] == second_result["running_estimate"]
 
 
+def test_streamed_uncertainty_matches_running_statistics() -> None:
+    """Every streamed diagnostic should agree with its defining formula."""
+    final_chunk = get_final_chunk(VALID_CONFIG)
+    expected_standard_error = math.sqrt(
+        final_chunk["running_variance"] / final_chunk["sample_number"]
+    )
+    expected_margin = 1.96 * expected_standard_error
+
+    assert final_chunk["standard_error"] == pytest.approx(
+        expected_standard_error
+    )
+    assert final_chunk["confidence_interval_lower"] == pytest.approx(
+        final_chunk["running_estimate"] - expected_margin
+    )
+    assert final_chunk["confidence_interval_upper"] == pytest.approx(
+        final_chunk["running_estimate"] + expected_margin
+    )
+
+
+def test_standard_error_reduces_during_a_large_seeded_run() -> None:
+    """A larger sample count should reduce the estimate's standard error."""
+    config_data = VALID_CONFIG | {"n_samples": 100_000}
+    chunks = list(run_standard_mc(SimulationConfig(**config_data)))
+
+    assert chunks[-1]["standard_error"] < chunks[0]["standard_error"]
+
+
+def test_analytical_value_is_inside_large_run_confidence_interval() -> None:
+    """A large seeded run should contain the known integral in its interval."""
+    config_data = VALID_CONFIG | {"n_samples": 100_000}
+
+    final_chunk = get_final_chunk(config_data)
+
+    assert final_chunk["confidence_interval_lower"] < 0.5
+    assert final_chunk["confidence_interval_upper"] > 0.5
+
+
 @pytest.mark.parametrize("sample_count", [100, 100_000])
 def test_config_accepts_sample_count_boundaries(sample_count: int) -> None:
     """The minimum and maximum permitted sample counts should be valid."""
@@ -170,6 +240,9 @@ def test_endpoint_streams_valid_simulation() -> None:
     event_data = json.loads(response.text.removeprefix("data: ").strip())
     assert event_data["sample_number"] == 100
     assert len(event_data["samples"]) == 100
+    assert event_data["standard_error"] > 0
+    assert event_data["confidence_interval_lower"] < event_data["running_estimate"]
+    assert event_data["confidence_interval_upper"] > event_data["running_estimate"]
     assert event_data["complete"] is True
 
 

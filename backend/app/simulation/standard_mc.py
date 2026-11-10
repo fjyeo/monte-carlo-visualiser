@@ -25,6 +25,11 @@ from typing import Generator, Literal, Optional
 import numpy as np
 from pydantic import BaseModel, Field, model_validator
 
+from app.diagnostics.uncertainty import (
+    calculate_confidence_interval,
+    calculate_standard_error,
+)
+
 
 IntegrandName = Literal["x", "x_squared", "sin_x"]
 
@@ -166,6 +171,9 @@ def run_standard_mc(config: SimulationConfig) -> Generator[dict, None, None]:
             - "sample_number" (int): Index of the last sample in this chunk.
             - "running_estimate" (float): Current definite-integral estimate.
             - "running_variance" (float): Variance of scaled function values.
+            - "standard_error" (float): Uncertainty of the current estimate.
+            - "confidence_interval_lower" (float): Lower 95% interval limit.
+            - "confidence_interval_upper" (float): Upper 95% interval limit.
             - "samples" (list[float]): The raw samples in this chunk window.
             - "complete" (bool, final only): True when the run is finished.
 
@@ -208,10 +216,23 @@ def run_standard_mc(config: SimulationConfig) -> Generator[dict, None, None]:
         is_last_sample = (i == config.n_samples)
 
         if is_chunk_boundary or is_last_sample:
+            sample_variance = _sample_variance(welford_count, welford_M2)
+            standard_error = calculate_standard_error(
+                sample_variance,
+                welford_count,
+            )
+            confidence_lower, confidence_upper = calculate_confidence_interval(
+                welford_mean,
+                standard_error,
+            )
+
             yield {
                 "sample_number": i,
                 "running_estimate": welford_mean,
-                "running_variance": _sample_variance(welford_count, welford_M2),
+                "running_variance": sample_variance,
+                "standard_error": standard_error,
+                "confidence_interval_lower": confidence_lower,
+                "confidence_interval_upper": confidence_upper,
                 "samples": chunk_samples.copy(),
                 "complete": is_last_sample,
             }

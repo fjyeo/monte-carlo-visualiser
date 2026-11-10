@@ -57,6 +57,15 @@ export interface SimulationChunk {
    */
   running_variance: number
 
+  /** Estimated standard deviation of the running integral estimate. */
+  standard_error: number
+
+  /** Lower limit of the approximate 95% confidence interval. */
+  confidence_interval_lower: number
+
+  /** Upper limit of the approximate 95% confidence interval. */
+  confidence_interval_upper: number
+
   /** The raw sample values generated in this chunk window. */
   samples: number[]
 
