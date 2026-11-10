@@ -16,6 +16,7 @@ import SimulationResults from './components/SimulationResults'
 import { useSimulation } from './hooks/useSimulation'
 import type { SimulationConfig } from './types/simulation'
 import ConvergencePlot from './visualisations/ConvergencePlot'
+import UncertaintyPlot from './visualisations/UncertaintyPlot'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -170,6 +171,11 @@ export default function App() {
           chunks={chunks}
           requestedSamples={requestedSamples}
           analyticalValue={analyticalValue}
+        />
+
+        <UncertaintyPlot
+          chunks={chunks}
+          requestedSamples={requestedSamples}
         />
       </div>
     </main>
